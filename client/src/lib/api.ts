@@ -8,10 +8,24 @@ const api = axios.create({
   timeout: 15_000,
 })
 
+const getCookie = (name: string) => {
+  try {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const m = document.cookie.match(new RegExp(`(?:^|; )${escaped}=([^;]*)`))
+    return m ? decodeURIComponent(m[1]) : null
+  } catch {
+    return null
+  }
+}
+
 // Attach token
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = useAuthStore.getState().accessToken
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  const state = useAuthStore.getState()
+  const token = state.accessToken || getCookie('bh_at')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+    if (!state.accessToken) state.setToken(token)
+  }
   return config
 })
 
