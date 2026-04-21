@@ -15,17 +15,17 @@ export function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for auth token in cookies (set by the server via httpOnly cookie)
-  // We also check localStorage-persisted token via a custom header the client sets
-  const cookieToken   = req.cookies.get('refreshToken')?.value
-  const authHeader    = req.headers.get('x-auth-token')
-
-  // For dashboard routes, if no token at all redirect to login.
+  // For dashboard routes, if no access token cookie at all redirect to login.
   // Important: only do this for full document navigations. Redirecting RSC/data
   // requests can result in a blank screen during client-side navigation.
+  //
+  // Note: We intentionally use a client-set cookie (`bh_at`) rather than relying on
+  // upstream Set-Cookie headers from a separate API host. This keeps Vercel+Railway
+  // deployments stable even when proxy/cookie forwarding differs by platform.
+  const accessTokenCookie = req.cookies.get('bh_at')?.value
   const accept = req.headers.get('accept') || ''
   const isDocumentNav = req.method === 'GET' && accept.includes('text/html')
-  if (pathname.startsWith('/dashboard') && !cookieToken && !authHeader && isDocumentNav) {
+  if (pathname.startsWith('/dashboard') && !accessTokenCookie && isDocumentNav) {
     const url = req.nextUrl.clone()
     url.pathname = '/auth/login'
     url.searchParams.set('from', pathname)

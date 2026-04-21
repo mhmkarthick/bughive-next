@@ -32,7 +32,16 @@ export function useLogin() {
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
       authApi.login(email, password).then(r => r.data.data),
-    onSuccess: d => { setAuth(d.user, d.accessToken); toast.success('Welcome back!') },
+    onSuccess: d => {
+      setAuth(d.user, d.accessToken)
+      try {
+        const secure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+        const attrs = [`Path=/`, `Max-Age=900`, `SameSite=Lax`]
+        if (secure) attrs.push('Secure')
+        document.cookie = `bh_at=${encodeURIComponent(d.accessToken)}; ${attrs.join('; ')}`
+      } catch {}
+      toast.success('Welcome back!')
+    },
     onError:   (e: any) => toast.error(e.response?.data?.message || 'Login failed'),
   })
 }
@@ -42,7 +51,13 @@ export function useLogout() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: () => authApi.logout(),
-    onSettled:  () => { logout(); qc.clear() },
+    onSettled:  () => {
+      try {
+        document.cookie = 'bh_at=; Path=/; Max-Age=0; SameSite=Lax'
+      } catch {}
+      logout()
+      qc.clear()
+    },
   })
 }
 

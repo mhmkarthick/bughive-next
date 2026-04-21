@@ -33,12 +33,21 @@ api.interceptors.response.use(
         const { data } = await axios.post('/api/auth/refresh', {}, { withCredentials: true })
         const token: string = data.data.accessToken
         useAuthStore.getState().setToken(token)
+        try {
+          const secure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+          const attrs = [`Path=/`, `Max-Age=900`, `SameSite=Lax`]
+          if (secure) attrs.push('Secure')
+          document.cookie = `bh_at=${encodeURIComponent(token)}; ${attrs.join('; ')}`
+        } catch {}
         queue.forEach(p => p.resolve(token)); queue = []
         orig.headers.Authorization = `Bearer ${token}`
         return api(orig)
       } catch (e) {
         queue.forEach(p => p.reject(e)); queue = []
         useAuthStore.getState().logout()
+        try {
+          document.cookie = 'bh_at=; Path=/; Max-Age=0; SameSite=Lax'
+        } catch {}
         window.location.href = '/auth/login'
         return Promise.reject(e)
       } finally { refreshing = false }
