@@ -98,11 +98,11 @@ async function bootstrap() {
 
   initSocket(server)
 
-  server.listen(PORT, () => {
-    logger.info(
-      `🚀 BugHive API running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`
-    )
-  })
+  server.listen(PORT, '0.0.0.0', () => {
+  logger.info(
+    `🚀 BugHive API running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`
+  )
+})
 }
 
 bootstrap()
