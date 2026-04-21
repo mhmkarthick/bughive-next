@@ -48,7 +48,12 @@ export const register = async (req: Request, res: Response) => {
 
   emailService.sendWelcome(user.email, user.name).catch(() => {})
 
-  res.cookie('refreshToken', refreshToken, COOKIE_OPTS)
+  res.cookie('refreshToken', refreshToken, {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'none',
+  path: '/',
+})
 
   return sendCreated(res, { user, accessToken }, 'Registration successful')
 }

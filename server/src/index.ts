@@ -32,10 +32,11 @@ const server = http.createServer(app)
 // ─── Security ────────────────────────────────────────────────
 app.use(helmet())
 
+// ✅ FIXED CORS (VERY IMPORTANT)
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    process.env.CLIENT_URL || ''
+    'https://bughive-next-client.vercel.app', // 🔥 your frontend
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -60,7 +61,7 @@ app.use(morgan('combined', {
   }
 }))
 
-// ─── Health + Root (IMPORTANT for Railway) ───────────────────
+// ─── Health + Root (for Railway) ─────────────────────────────
 app.get('/', (_req, res) => {
   res.send('🚀 BugHive API is running')
 })
@@ -93,16 +94,16 @@ async function bootstrap() {
     logger.info('✅ MongoDB connected')
   } catch (error) {
     logger.error('❌ MongoDB connection failed:', error)
-    // DO NOT EXIT — allow server to still run
+    // do not exit → allow server to run
   }
 
   initSocket(server)
 
   server.listen(PORT, '0.0.0.0', () => {
-  logger.info(
-    `🚀 BugHive API running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`
-  )
-})
+    logger.info(
+      `🚀 BugHive API running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`
+    )
+  })
 }
 
 bootstrap()
